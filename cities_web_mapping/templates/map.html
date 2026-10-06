@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Cities Web Map</title>
+
+    {% load static %}
+
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <div class="control-panel">
+        <h3>City Search</h3>
+
+        <input
+            type="text"
+            id="searchInput"
+            class="search-box"
+            placeholder="Search cities..."
+        >
+
+        <button id="resetBtn">
+            Reset View
+        </button>
+
+        <div id="results"></div>
+    </div>
+
+    <div class="info-box">
+        <h4>Map Information</h4>
+        <p>
+            Cities loaded:
+            <strong id="cityCount">0</strong>
+        </p>
+        <p>Click a marker to view city details.</p>
+    </div>
+
+    <div class="loading" id="loading">
+        Loading cities data...
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="{% static 'js/map.js' %}"></script>
+
+</body>
+</html>
