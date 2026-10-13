@@ -9,6 +9,6 @@ The application uses Leaflet.js to display the cities retrieved from the Django 
 
 ## Tests
 
-![Django Tests](submission_evidence/test.png)
+![Django Tests](submission_evidence/tests.png)
 
 The Django automated tests completed successfully with 2 tests passing.
