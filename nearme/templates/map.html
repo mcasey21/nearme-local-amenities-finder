@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NearMe - Local Amenities Finder</title>
+
+    {% load static %}
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div id="map"></div>
+
+
+<footer class="app-footer">
+    <div class="footer-brand">
+        <strong>NearMe</strong>
+        <span>Local Amenities Finder</span>
+    </div>
+
+    <div class="footer-auth">
+        {% if user.is_authenticated %}
+            <span class="user-status">
+                <span class="status-dot"></span>
+                {{ user.username }}
+            </span>
+
+            {% if user.is_staff %}
+                <a href="/admin/" class="footer-button admin-button">
+                    Admin Dashboard
+                </a>
+
+                <button id="addAmenityBtn" class="footer-button add-button">
+                    + Add Amenity
+                </button>
+            {% endif %}
+
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="footer-button logout-button">
+                    Sign Out
+                </button>
+            </form>
+
+        {% else %}
+            <a href="{% url 'login' %}" class="footer-button login-button">
+                Sign In
+            </a>
+        {% endif %}
+    </div>
+</footer>
+
+    <form style="display: none;">
+        {% csrf_token %}
+    </form>
+
+    <div class="control-panel">
+        <h3>Find Local Amenities</h3>
+
+<input
+    type="text"
+    id="searchInput"
+    class="search-box"
+    placeholder="Search amenities..."
+>
+
+<h4>Filter by Category</h4>
+
+<div class="category-filters">
+    <label>
+        <input type="checkbox" class="category-filter" value="cafe" checked>
+        Cafés
+    </label>
+
+    <label>
+        <input type="checkbox" class="category-filter" value="restaurant" checked>
+        Restaurants
+    </label>
+
+    <label>
+        <input type="checkbox" class="category-filter" value="supermarket" checked>
+        Supermarkets
+    </label>
+
+    <label>
+        <input type="checkbox" class="category-filter" value="park" checked>
+        Parks
+    </label>
+
+    <label>
+        <input type="checkbox" class="category-filter" value="pharmacy" checked>
+        Pharmacies
+    </label>
+
+    <label>
+        <input type="checkbox" class="category-filter" value="transport" checked>
+        Public Transport
+    </label>
+</div>
+
+<hr>
+
+        <h3>Spatial Proximity Search</h3>
+        <p id="originStatus">Select an amenity marker to choose a search origin.</p>
+
+        <button id="nearestBtn" disabled>
+            Find 10 Nearest Amenities
+        </button>
+
+        <div class="radius-controls">
+            <label for="radiusInput">Search radius (km)</label>
+            <input
+                type="number"
+                id="radiusInput"
+                value="500"
+                min="0.1"
+                max="20000"
+                step="any"
+            >
+            <button id="radiusBtn" disabled>
+                Search Radius
+            </button>
+        </div>
+
+        <div id="proximityStatus" role="status"></div>
+        <div id="proximityResults"></div>
+
+        <hr>
+
+        <button id="resetBtn">Reset View</button>
+        <div id="results"></div>
+    </div>
+    {% if user.is_staff %}
+<div id="amenityFormPanel" class="amenity-form-panel" style="display: none;">
+    <h3>Add New Amenity</h3>
+
+    <form id="amenityForm">
+        {% csrf_token %}
+
+        <label for="amenityName">Name</label>
+        <input type="text" id="amenityName" required>
+
+        <label for="amenityCategory">Category</label>
+        <select id="amenityCategory" required>
+            <option value="cafe">Café</option>
+            <option value="restaurant">Restaurant</option>
+            <option value="supermarket">Supermarket</option>
+            <option value="park">Park</option>
+            <option value="pharmacy">Pharmacy</option>
+            <option value="transport">Public Transport</option>
+        </select>
+
+        <label for="amenityAddress">Address</label>
+        <input type="text" id="amenityAddress">
+
+        <label for="amenityDescription">Description</label>
+        <textarea id="amenityDescription"></textarea>
+
+        <p id="amenityFormStatus"></p>
+
+        <button type="submit">Save Amenity</button>
+        <button type="button" id="cancelAmenityBtn">Cancel</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="info-box">
+    <h4>Map Information</h4>
+
+    <p>Amenities loaded: <strong id="cityCount">0</strong></p>
+
+    <p>Click anywhere on the map to choose a search origin, or click an amenity marker.</p>
+
+    <hr>
+
+
+<div class="legend-container">
+    <button id="legendToggle" class="legend-toggle">
+        Map Legend <span id="legendArrow">▼</span>
+    </button>
+
+    <div id="legendContent" class="legend-content">
+        <div class="legend-item">
+            <span class="legend-colour" style="background: #e67e22;"></span>
+            Cafés
+        </div>
+        <div class="legend-item">
+            <span class="legend-colour" style="background: #e74c3c;"></span>
+            Restaurants
+        </div>
+        <div class="legend-item">
+            <span class="legend-colour" style="background: #2ecc71;"></span>
+            Supermarkets
+        </div>
+        <div class="legend-item">
+            <span class="legend-colour" style="background: #27ae60;"></span>
+            Parks
+        </div>
+        <div class="legend-item">
+            <span class="legend-colour" style="background: #9b59b6;"></span>
+            Pharmacies
+        </div>
+        <div class="legend-item">
+            <span class="legend-colour" style="background: #3498db;"></span>
+            Public Transport
+        </div>
+    </div>
+</div>
+
+
+    <div class="loading" id="loading">
+        Loading amenities data...
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{% static 'js/map.js' %}"></script>
+</body>
+</html>
+
